@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppProvider, usePedidos, useConfig,ConfigContext } from '../context';
 function ConfiguracionScreen({ navigation }) {
-  const { config, setConfig } = useConfig();
+  const { config, setConfig, resetConfig } = useConfig();
   const [editPrecios, setEditPrecios] = useState(false);
   const [nuevosPrecios, setNuevosPrecios] = useState({...config.precios});
   const [nuevaMesa, setNuevaMesa] = useState('');
@@ -60,6 +60,30 @@ function ConfiguracionScreen({ navigation }) {
     Alert.alert(message);
   };
 
+  const handleResetConfig = () => {
+    Alert.alert(
+      "Restablecer Configuración",
+      "¿Estás seguro de que quieres restablecer toda la configuración a los valores predeterminados? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Restablecer",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await resetConfig();
+              showToast("La configuración ha sido restablecida.");
+              // Opcional: navegar a otra pantalla o recargar la actual si es necesario
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert("Error", "No se pudo restablecer la configuración.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatCurrency = (amount) => {
     return `$${amount.toFixed(2)}`;
   };
@@ -85,7 +109,7 @@ function ConfiguracionScreen({ navigation }) {
               <Text style={styles.subtitulo}>Tacos</Text>
               {Object.entries(nuevosPrecios.tacos).map(([tipo, variedades]) => (
                 <View key={tipo}>
-                  <Text style={styles.tipoProducto}>{tipo.charAt(0).toUpperCase() + tipo.slice(1)}</Text>
+                  <Text style={styles.tipoProducto}>{tipo.charAt(0).toUpperCase()+tipo.slice(1)}</Text>
                   {typeof variedades === 'object' ? (
                     Object.entries(variedades).map(([variedad, precio]) => (
                       <View key={`${tipo}-${variedad}`} style={styles.precioInputContainer}>
@@ -137,7 +161,7 @@ function ConfiguracionScreen({ navigation }) {
               <Text style={styles.subtitulo}>Bebidas</Text>
               {Object.entries(nuevosPrecios.bebidas).map(([tipo, variedades]) => (
                 <View key={tipo}>
-                  <Text style={styles.tipoProducto}>{tipo.charAt(0).toUpperCase() + tipo.slice(1)}</Text>
+                  <Text style={styles.tipoProducto}>{tipo.charAt(0).toUpperCase()+tipo.slice(1)}</Text>
                   {Object.entries(variedades).map(([variedad, precio]) => (
                     <View key={`${tipo}-${variedad}`} style={styles.precioInputContainer}>
                       <Text style={styles.precioLabel}>{variedad}:</Text>
@@ -254,65 +278,51 @@ function ConfiguracionScreen({ navigation }) {
 
         {/* Sección de Mesas */}
         <View style={styles.configSection}>
-          <Text style={styles.configTitle}>Mesas</Text>
-          <View style={styles.mesasList}>
-            {config.mesas.map(num => (
-              <View key={num} style={styles.mesaItem}>
-                <Text style={styles.mesaText}>Mesa {num}</Text>
-                <TouchableOpacity onPress={() => eliminarMesa(num)}>
-                  <Ionicons name="trash" size={20} color="#dc3545" />
+          <Text style={styles.configTitle}>Administrar Mesas</Text>
+          <View style={styles.mesasContainer}>
+            {config.mesas.map(mesaNum => (
+              <View key={mesaNum} style={styles.mesaItem}>
+                <Text>Mesa {mesaNum}</Text>
+                <TouchableOpacity onPress={() => eliminarMesa(mesaNum)}>
+                  <Ionicons name="trash-bin" size={20} color="#dc3545" />
                 </TouchableOpacity>
               </View>
             ))}
           </View>
-          <View style={styles.addMesaContainer}>
+          <View style={styles.agregarMesaContainer}>
             <TextInput
-              style={styles.addMesaInput}
+              style={styles.mesaInput}
               placeholder="Número de mesa"
               keyboardType="numeric"
               value={nuevaMesa}
               onChangeText={setNuevaMesa}
             />
-            <Button 
-              title="Agregar" 
-              onPress={agregarMesa} 
-              disabled={!nuevaMesa}
-            />
+            <Button title="Agregar Mesa" onPress={agregarMesa} />
           </View>
         </View>
 
-        {/* Sección de Impuestos */}
+        {/* Sección de Modo Oscuro */}
         <View style={styles.configSection}>
-          <Text style={styles.configTitle}>Impuesto</Text>
-          <View style={styles.impuestoContainer}>
-            <TextInput
-              style={styles.impuestoInput}
-              keyboardType="numeric"
-              value={(config.impuesto * 100).toString()}
-              onChangeText={(text) => {
-                const num = parseFloat(text) || 0;
-                setConfig(prev => ({
-                  ...prev,
-                  impuesto: num / 100
-                }));
-              }}
-            />
-            <Text style={styles.porcentaje}>%</Text>
-          </View>
-        </View>
-
-        {/* Sección de Apariencia */}
-        <View style={styles.configSection}>
-          <Text style={styles.configTitle}>Apariencia</Text>
-          <View style={styles.switchContainer}>
-            <Text style={styles.switchLabel}>Modo oscuro:</Text>
+          <View style={styles.configItem}>
+            <Text style={styles.configTitle}>Modo Oscuro</Text>
             <Switch
-              value={config.modoOscuro}
-              onValueChange={toggleModoOscuro}
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               thumbColor={config.modoOscuro ? "#f5dd4b" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleModoOscuro}
+              value={config.modoOscuro}
             />
           </View>
+        </View>
+
+        {/* Sección de Restablecer */}
+        <View style={styles.configSection}>
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={handleResetConfig}
+          >
+            <Text style={styles.resetButtonText}>Restablecer Configuración</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -324,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff', // blanco
   },
   header: {
     flexDirection: 'row',
@@ -337,119 +347,129 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     flex: 1,
+    color: '#000', // negro
   },
   configSection: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+    backgroundColor: '#f9f9f9', // muy claro
+    borderRadius: 12,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   configTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#000',
   },
   subtitulo: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
-    color: '#555',
+    color: '#000',
   },
   tipoProducto: {
-    fontWeight: '600',
-    marginTop: 5,
-    marginBottom: 5,
+    fontSize: 15,
+    fontWeight: '500',
+    marginTop: 8,
     color: '#333',
-  },
-  precioItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 5,
-  },
-  precioText: {
-    textTransform: 'capitalize',
-  },
-  precioValue: {
-    fontWeight: '600',
   },
   precioInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 5,
+    justifyContent: 'space-between',
+    marginLeft: 15,
+    marginBottom: 5
   },
   precioLabel: {
-    width: 120,
-    textTransform: 'capitalize',
+    fontSize: 14,
+    color: '#333'
   },
   precioInput: {
-    flex: 1,
     borderWidth: 1,
-    borderColor: '#ced4da',
-    padding: 8,
-    borderRadius: 4,
+    borderColor: '#ccc',
     backgroundColor: '#fff',
+    color: '#000',
+    padding: 8,
+    width: 80,
+    textAlign: 'center',
+    borderRadius: 5
   },
-  configButtons: {
+  precioItem: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 15,
+    justifyContent: 'space-between',
+    marginLeft: 15,
+    marginBottom: 5
   },
-  mesasList: {
-    marginBottom: 15,
+  precioText: {
+    color: '#333'
+  },
+  precioValue: {
+    color: '#000'
+  },
+  mesasContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center'
   },
   mesaItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    margin: 5,
+    width: 100,
+    backgroundColor: '#fff'
   },
-  mesaText: {
-    fontSize: 16,
-  },
-  addMesaContainer: {
+  agregarMesaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'center',
+    marginTop: 10
   },
-  addMesaInput: {
-    flex: 1,
+  mesaInput: {
     borderWidth: 1,
-    borderColor: '#ced4da',
-    padding: 10,
-    borderRadius: 4,
-    marginRight: 10,
+    borderColor: '#ccc',
     backgroundColor: '#fff',
-  },
-  impuestoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  impuestoInput: {
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    width: 80,
+    color: '#000',
     padding: 8,
-    borderRadius: 4,
-    marginRight: 5,
-    backgroundColor: '#fff',
+    width: 150,
+    marginRight: 10,
+    borderRadius: 5
   },
-  porcentaje: {
-    fontSize: 16,
-  },
-  switchContainer: {
+  configItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  resetButton: {
+    backgroundColor: '#b22222',
+    padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
-    paddingVertical: 5,
+    marginTop: 20
   },
-  switchLabel: {
-    fontSize: 16,
+  resetButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16
   },
+  configButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10
+  }
 });
+
 
 export default ConfiguracionScreen;

@@ -11,17 +11,24 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-masked-view/masked-view": "0.3.2",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/stack": "^7.4.7",
     "expo": "~53.0.20",
+    "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
+    "prop-types": "^15.8.1",
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-date-picker": "^5.0.13",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-haptic-feedback": "^2.3.3",
     "react-native-reanimated": "^4.0.2",
-    "react-native-svg": "15.11.2"
+    "react-native-svg": "15.11.2",
+    "expo-file-system": "~18.1.11",
+    "expo-sharing": "~13.1.5",
+    "expo-print": "~14.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

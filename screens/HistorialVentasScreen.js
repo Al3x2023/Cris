@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // fondo blanco
   },
   header: {
     flexDirection: 'row',
@@ -151,14 +151,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     flex: 1,
+    color: '#000', // negro
   },
   resumenContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    backgroundColor: '#fff', // blanco
+    borderRadius: 12,
     padding: 15,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#000', // negro
   },
   resumenItem: {
     flexDirection: 'row',
@@ -167,17 +170,18 @@ const styles = StyleSheet.create({
   resumenText: {
     marginLeft: 8,
     fontSize: 16,
+    color: '#000', // negro
   },
   listContainer: {
     paddingBottom: 20,
   },
   ticketItem: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    backgroundColor: '#fff', // blanco
+    borderRadius: 12,
     padding: 15,
     marginBottom: 15,
-    borderLeftWidth: 4,
-    borderLeftColor: '#841584',
+    borderWidth: 1,
+    borderColor: '#000', // negro
   },
   ticketHeader: {
     flexDirection: 'row',
@@ -187,9 +191,10 @@ const styles = StyleSheet.create({
   ticketMesa: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#000', // negro
   },
   ticketFecha: {
-    color: '#666',
+    color: '#333', // gris oscuro
     fontSize: 14,
   },
   ticketInfo: {
@@ -199,22 +204,22 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   ticketProductos: {
-    color: '#555',
+    color: '#333', // gris oscuro
   },
   ticketTotal: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: '#28a745',
+    color: '#000', // negro
   },
   ticketFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: '#000', // negro
     paddingTop: 5,
     marginTop: 5,
   },
   ticketImpuesto: {
     fontSize: 12,
-    color: '#666',
+    color: '#333', // gris oscuro
   },
   emptyState: {
     flex: 1,
@@ -224,7 +229,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 15,
     fontSize: 16,
-    color: '#666',
+    color: '#000', // negro
   },
 });
 

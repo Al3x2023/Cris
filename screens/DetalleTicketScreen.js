@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 50,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // blanco
   },
   header: {
     flexDirection: 'row',
@@ -190,13 +190,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#000', // negro
   },
   titulo: {
     fontSize: 20,
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
+    color: '#000', // negro
   },
   headerIcons: {
     flexDirection: 'row',
@@ -218,16 +219,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 5,
-    color: '#841584',
+    color: '#000', // negro
   },
   ticketInfo: {
     fontSize: 14,
-    color: '#666',
+    color: '#333', // gris oscuro
     marginBottom: 3,
   },
   divider: {
     height: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: '#000', // negro
     marginVertical: 10,
   },
   productosContainer: {
@@ -237,32 +238,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#555',
+    color: '#000', // negro
   },
   productoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
     paddingVertical: 5,
+    backgroundColor: '#fff', // blanco
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#000', // negro
   },
   productoInfo: {
     flex: 2,
   },
   productoNombre: {
     fontWeight: '500',
+    color: '#000', // negro
   },
   productoDetalle: {
     fontSize: 12,
-    color: '#666',
+    color: '#555', // gris oscuro
   },
   productoTotal: {
     flex: 1,
     textAlign: 'right',
     fontWeight: 'bold',
+    color: '#000', // negro
   },
   totalesContainer: {
     marginTop: 10,
     marginBottom: 20,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#000', // negro
+    backgroundColor: '#fff', // blanco
   },
   totalLine: {
     flexDirection: 'row',
@@ -271,38 +284,41 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
+    color: '#000', // negro
   },
   totalValue: {
     fontWeight: '500',
+    color: '#000', // negro
   },
   totalFinalLine: {
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#000', // negro
     paddingTop: 8,
     marginTop: 8,
   },
   totalFinalLabel: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#000', // negro
   },
   totalFinalValue: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#28a745',
+    color: '#000', // negro
   },
   agradecimiento: {
     textAlign: 'center',
     fontStyle: 'italic',
     marginVertical: 20,
-    color: '#666',
+    color: '#000', // negro
   },
   actionsContainer: {
     flexDirection: 'row',
     padding: 15,
     paddingBottom: Platform.OS === 'ios' ? 30 : 15,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff', // blanco
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: '#000', // negro
   },
   actionButton: {
     flex: 1,
@@ -310,20 +326,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 5,
+    borderRadius: 12,
     marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#000', // negro
   },
   printButton: {
-    backgroundColor: '#841584',
+    backgroundColor: '#000', // negro
   },
   shareButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#000', // negro
   },
   actionButtonText: {
-    color: '#fff',
+    color: '#fff', // blanco
     marginLeft: 8,
     fontWeight: 'bold',
   },
 });
+
 
 export default DetalleTicketScreen;

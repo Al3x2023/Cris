@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
   TouchableOpacity,
   Alert,
   ToastAndroid,
@@ -13,6 +12,35 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePedidos, useConfig } from '../context';
+import * as Print from 'expo-print';
+
+const imprimirTicket = async () => {
+  const html = `
+    <h2>Mesa ${mesa}</h2>
+    <p>Fecha: ${new Date().toLocaleString()}</p>
+    <table style="width:100%; border-collapse: collapse;">
+      <tr>
+        <th>Producto</th>
+        <th>Cant.</th>
+        <th>Precio</th>
+        <th>Total</th>
+      </tr>
+      ${pedidoMesa.map(item => `
+        <tr>
+          <td>${item.nombre}</td>
+          <td>${item.cantidad}</td>
+          <td>${item.precio.toFixed(2)}</td>
+          <td>${item.total.toFixed(2)}</td>
+        </tr>
+      `).join('')}
+    </table>
+    <p>Subtotal: ${subtotal.toFixed(2)}</p>
+    <p>Impuesto: ${impuesto.toFixed(2)}</p>
+    <p>Total: ${totalFinal.toFixed(2)}</p>
+  `;
+  
+  await Print.printAsync({ html });
+};
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 375;
@@ -26,6 +54,43 @@ function CuentaScreen({ navigation, route }) {
   const subtotal = pedidoMesa.reduce((sum, item) => sum + (item.total || 0), 0);
   const impuesto = subtotal * (config.impuesto || 0);
   const totalFinal = subtotal + impuesto;
+   // Función corregida dentro del componente
+  const imprimirTicket = async () => {
+    if (pedidoMesa.length === 0) {
+      Alert.alert("No hay productos para imprimir");
+      return;
+    }
+
+    const html = `
+      <h2>Mesa ${mesa}</h2>
+      <p>Fecha: ${new Date().toLocaleString()}</p>
+      <table style="width:100%; border-collapse: collapse;">
+        <tr>
+          <th>Producto</th>
+          <th>Cant.</th>
+          <th>Precio</th>
+          <th>Total</th>
+        </tr>
+        ${pedidoMesa.map(item => `
+          <tr>
+            <td>${item.nombre}</td>
+            <td>${item.cantidad}</td>
+            <td>${item.precio.toFixed(2)}</td>
+            <td>${item.total.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <p>Subtotal: ${subtotal.toFixed(2)}</p>
+      <p>Impuesto: ${impuesto.toFixed(2)}</p>
+      <p>Total: ${totalFinal.toFixed(2)}</p>
+    `;
+
+    try {
+      await Print.printAsync({ html });
+    } catch (error) {
+      Alert.alert("Error al imprimir ticket", error.message);
+    }
+  };
 
   const borrarItem = (id) => {
     Alert.alert(
@@ -129,41 +194,43 @@ function CuentaScreen({ navigation, route }) {
             size={isSmallScreen ? 40 : 50} 
             color="#ccc" 
           />
-          <Text style={[styles.emptyText, isSmallScreen && styles.smallText]}>
-            No hay productos en esta mesa
-          </Text>
+          <Text style={[styles.emptyText, isSmallScreen && styles.smallText]}>No hay productos en esta mesa</Text>
         </View>
       ) : (
-        <ScrollView 
-          style={styles.lista}
-          contentContainerStyle={styles.listaContent}
-        >
-          {pedidoMesa.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => borrarItem(item.id)}
-              style={styles.itemContainer}
-            >
-              <View style={styles.itemTicket}>
-                <View style={styles.itemInfo}>
-                  <Text 
-                    style={[styles.itemNombre, isSmallScreen && styles.smallText]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.nombre}
-                  </Text>
-                  <Text style={[styles.itemDetalle, isSmallScreen && styles.smallDetail]}>
-                    {formatCurrency(item.cantidad)} x {formatCurrency(item.precio)} • {item.hora}
-                  </Text>
-                </View>
-                <Text style={[styles.itemTotal, isSmallScreen && styles.smallTotal]}>
-                  {formatCurrency(item.total)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+<ScrollView 
+  style={styles.lista}
+  contentContainerStyle={styles.listaContent}
+>
+  {pedidoMesa.map((item) => (
+    <TouchableOpacity
+      key={item.id}
+      onPress={() => borrarItem(item.id)}
+      style={styles.itemContainer}
+    >
+      <View style={styles.itemTicket}>
+        {/* Fila: Nombre a la izquierda, Cantidad x Precio • Hora a la derecha */}
+        <View style={styles.itemRow}>
+          <Text 
+            style={[styles.itemNombre, isSmallScreen && styles.smallText]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.nombre}
+          </Text>
+          <Text style={[styles.itemDetalle, isSmallScreen && styles.smallDetail]}>
+            {item.cantidad} x {item.precio.toFixed(2)} • {item.hora}
+          </Text>
+        </View>
+
+        {/* Total debajo alineado a la derecha */}
+        <Text style={[styles.itemTotal, isSmallScreen && styles.smallTotal]}>
+          {formatCurrency(item.total)}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
+
       )}
 
       {/* Sección de totales */}
@@ -203,6 +270,14 @@ function CuentaScreen({ navigation, route }) {
       >
         <Text style={styles.cobrarButtonText}>Cobrar Mesa</Text>
       </TouchableOpacity>
+       {/* Botón de imprimir */}
+      <TouchableOpacity
+        style={[styles.cobrarButton, pedidoMesa.length === 0 && styles.disabledButton]}
+        onPress={imprimirTicket}
+        disabled={pedidoMesa.length === 0}
+      >
+        <Text style={styles.cobrarButtonText}>Imprimir Ticket</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -212,7 +287,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: height * 0.05,
     paddingHorizontal: width * 0.04,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff', // fondo blanco
   },
   header: {
     flexDirection: 'row',
@@ -228,6 +303,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     flex: 1,
+    color: '#000', // negro
   },
   lista: {
     flex: 1,
@@ -242,10 +318,16 @@ const styles = StyleSheet.create({
   itemTicket: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    alignItems: 'flex-start',
+    backgroundColor: '#f9f9f9', // fondo claro
     padding: width * 0.04,
-    borderRadius: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemInfo: {
     flex: 1,
@@ -253,23 +335,30 @@ const styles = StyleSheet.create({
   },
   itemNombre: {
     fontWeight: 'bold',
-    fontSize: width * 0.04,
+    fontSize: width * 0.045,
+    color: '#000', // negro
   },
   itemDetalle: {
-    fontSize: width * 0.032,
-    color: '#6c757d',
-    marginTop: height * 0.005,
-  },
-  itemTotal: {
-    fontWeight: 'bold',
-    color: '#28a745',
-    fontSize: width * 0.04,
-  },
+  fontSize: width * 0.035,
+  color: '#d32f2f', // rojo
+  marginTop: 4,
+},
+
+ itemTotal: {
+  marginTop: 2,
+  fontWeight: 'bold',
+  fontSize: width * 0.045,
+  color: '#000',
+  textAlign: 'right',
+},
+
   totalesContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f9f9f9',
     padding: width * 0.04,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: height * 0.02,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   totalLine: {
     flexDirection: 'row',
@@ -278,24 +367,28 @@ const styles = StyleSheet.create({
   },
   totalFinal: {
     borderTopWidth: 1,
-    borderTopColor: '#dee2e6',
+    borderTopColor: '#ccc',
     paddingTop: height * 0.01,
     marginTop: height * 0.01,
   },
   totalLabel: {
     fontWeight: '600',
     fontSize: width * 0.04,
+    color: '#000',
   },
   totalValue: {
     fontWeight: '600',
     fontSize: width * 0.04,
+    color: '#000',
   },
   totalFinalLabel: {
     fontSize: width * 0.045,
+    color: '#000',
   },
   totalFinalValue: {
     fontSize: width * 0.045,
-    color: '#28a745',
+    color: '#000',
+    fontWeight: 'bold',
   },
   emptyState: {
     flex: 1,
@@ -306,39 +399,87 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: height * 0.02,
     fontSize: width * 0.045,
-    color: '#6c757d',
+    color: '#555',
     textAlign: 'center',
   },
   cobrarButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#000',
     padding: width * 0.04,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: '#eee',
+    borderColor: '#aaa',
   },
   cobrarButtonText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: width * 0.045,
   },
   smallText: {
     fontSize: width * 0.038,
+    color: '#000',
   },
   smallDetail: {
-    fontSize: width * 0.028,
+    fontSize: width * 0.03,
+    color: '#d32f2f', // rojo
   },
   smallTotal: {
     fontSize: width * 0.035,
+    color: '#000',
   },
-  smallTotalLabel: {
-    fontSize: width * 0.04,
-  },
-  smallTotalValue: {
-    fontSize: width * 0.04,
-  },
+ itemTicket: {
+  backgroundColor: '#fff',
+  padding: width * 0.04,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  marginBottom: height * 0.015, // más espacio
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 2,
+  borderBottomWidth: 2, // separador
+  borderBottomColor: '#eee',
+},
+
+itemRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+itemNombre: {
+  fontWeight: 'bold',
+  fontSize: width * 0.045,
+  color: '#000',
+  flexShrink: 1, // para evitar overflow
+},
+itemDetalle: {
+  fontSize: width * 0.035,
+  color: '#d32f2f', // rojo
+  marginLeft: 10,
+},
+itemTotal: {
+  marginTop: 4,
+  fontWeight: 'bold',
+  fontSize: width * 0.04,
+  color: '#000',
+  textAlign: 'right',
+},
+smallText: {
+  fontSize: width * 0.038,
+},
+smallDetail: {
+  fontSize: width * 0.03,
+},
+smallTotal: {
+  fontSize: width * 0.038,
+},
+
 });
 
 export default CuentaScreen;

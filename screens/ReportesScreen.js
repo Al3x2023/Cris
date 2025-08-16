@@ -10,12 +10,14 @@ import {
   FlatList,
   TouchableOpacity
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from 'react-native-date-picker';
 import { Picker } from '@react-native-picker/picker';
 import Svg, { Path } from 'react-native-svg';
 import { usePedidos, useConfig } from '../context';
-
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 function ReportesScreen({ navigation }) {
   const { historialVentas } = usePedidos();
   const { config } = useConfig();
@@ -117,15 +119,26 @@ function ReportesScreen({ navigation }) {
     );
   };
 
-  const compartirReporte = (contenido) => {
-    if (Platform.OS === 'web') {
-      const blob = new Blob([contenido], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      window.open(url);
-    } else {
-      Alert.alert("Reporte listo", "El archivo CSV está listo para compartir");
+  const compartirReporte = async (contenido) => {
+  if (Platform.OS === 'web') {
+    const blob = new Blob([contenido], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    window.open(url);
+  } else {
+    try {
+      const fileUri = FileSystem.cacheDirectory + 'reporte.csv';
+      await FileSystem.writeAsStringAsync(fileUri, contenido, { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Compartir reporte CSV',
+        UTI: 'public.comma-separated-values-text'
+      });
+    } catch (error) {
+      Alert.alert("Error", "No se pudo generar el archivo CSV: " + error.message);
     }
-  };
+  }
+};
+
 
   // Comparativa semanal
   const comparativaSemanal = () => {
@@ -166,64 +179,105 @@ function ReportesScreen({ navigation }) {
       </View>
 
       {/* Controles de filtro */}
-      <View style={styles.filtrosContainer}>
-        <Button 
-          title={mostrarFiltros ? "Ocultar filtros" : "Mostrar filtros"} 
-          onPress={() => setMostrarFiltros(!mostrarFiltros)}
-          color="#841584"
-        />
-        
-        {mostrarFiltros && (
-          <View style={styles.filtrosContent}>
-            <View style={styles.filtroRow}>
-              <Text style={styles.filtroLabel}>Rango de fechas:</Text>
-              <Picker
-                selectedValue={tipoReporte}
-                style={styles.filtroPicker}
-                onValueChange={setTipoReporte}>
-                <Picker.Item label="Hoy" value="hoy" />
-                <Picker.Item label="Última semana" value="semana" />
-                <Picker.Item label="Personalizado" value="personalizado" />
-              </Picker>
-            </View>
-            
-            {tipoReporte === 'personalizado' && (
-              <View style={styles.filtroRow}>
-                <Text style={styles.filtroLabel}>Desde:</Text>
-                <DatePicker
-                  style={styles.filtroDate}
-                  date={fechaInicio}
-                  mode="date"
-                  onDateChange={(date) => setFechaInicio(new Date(date.setHours(0, 0, 0, 0)))}
-                />
-                
-                <Text style={styles.filtroLabel}>Hasta:</Text>
-                <DatePicker
-                  style={styles.filtroDate}
-                  date={fechaFin}
-                  mode="date"
-                  onDateChange={(date) => setFechaFin(new Date(date.setHours(23, 59, 59, 999)))}
-                />
-              </View>
-            )}
-          </View>
-        )}
+ 
+<View style={styles.filtrosContainer}>
+  {/* Botón Mostrar/Ocultar filtros con degradado */}
+  <TouchableOpacity onPress={() => setMostrarFiltros(!mostrarFiltros)}>
+    <LinearGradient
+      colors={['#000000ff', '#9503abff','#000000ff']} // degradado morado a rosa
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={{
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+        {mostrarFiltros ? "Ocultar filtros" : "Mostrar filtros"}
+      </Text>
+    </LinearGradient>
+  </TouchableOpacity>
+
+  {mostrarFiltros && (
+    <View style={styles.filtrosContent}>
+      <View style={styles.filtroRow}>
+        <Text style={styles.filtroLabel}>Rango de fechas:</Text>
+        <Picker
+          selectedValue={tipoReporte}
+          style={styles.filtroPicker}
+          onValueChange={setTipoReporte}>
+          <Picker.Item label="Hoy" value="hoy" />
+          <Picker.Item label="Última semana" value="semana" />
+          <Picker.Item label="Personalizado" value="personalizado" />
+        </Picker>
       </View>
+      
+      {tipoReporte === 'personalizado' && (
+        <View style={styles.filtroRow}>
+          <Text style={styles.filtroLabel}>Desde:</Text>
+          <DatePicker
+            style={styles.filtroDate}
+            date={fechaInicio}
+            mode="date"
+            onDateChange={(date) => setFechaInicio(new Date(date.setHours(0, 0, 0, 0)))}
+          />
+          
+          <Text style={styles.filtroLabel}>Hasta:</Text>
+          <DatePicker
+            style={styles.filtroDate}
+            date={fechaFin}
+            mode="date"
+            onDateChange={(date) => setFechaFin(new Date(date.setHours(23, 59, 59, 999)))}
+          />
+        </View>
+      )}
+    </View>
+  )}
+</View>
+
 
       {/* Acciones de exportación */}
-      <View style={styles.accionesContainer}>
-        <Button 
-          title="Exportar a CSV" 
-          onPress={exportarACSV}
-          color="#28a745"
-        />
-        
-        <Button 
-          title="Ver Historial Completo" 
-          onPress={() => navigation.navigate('HistorialVentas')}
-          color="#841584"
-        />
-      </View>
+
+<View style={styles.accionesContainer}>
+  {/* Botón Exportar a CSV con degradado */}
+  <TouchableOpacity onPress={exportarACSV} style={{ flex: 1, marginRight: 10 }}>
+    <LinearGradient
+      colors={['#000602ff', '#32a36fff']} // Degradado de verde claro a oscuro
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={{
+        paddingVertical: 12,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Exportar a CSV</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+
+  {/* Botón Ver Historial Completo con degradado */}
+  <TouchableOpacity onPress={() => navigation.navigate('HistorialVentas')} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={['#055e11ff', '#000000ff']} // Degradado verde oscuro
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={{
+        paddingVertical: 12,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Ver Historial Completo</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+</View>
+
 
       <ScrollView>
         {/* Resumen General */}
@@ -417,7 +471,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // fondo blanco
   },
   header: {
     flexDirection: 'row',
@@ -430,12 +484,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     flex: 1,
+    color: '#000', // negro
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   filtrosContainer: {
     marginBottom: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 10,
+    backgroundColor: '#f0f0f0', // gris claro
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc', // gris medio
   },
   filtrosContent: {
     marginTop: 10,
@@ -448,30 +508,42 @@ const styles = StyleSheet.create({
   filtroLabel: {
     marginRight: 10,
     minWidth: 60,
+    color: '#333', // gris oscuro
   },
   filtroPicker: {
     flex: 1,
     height: 50,
+    color: '#000',
   },
   filtroDate: {
     flex: 1,
+    color: '#000',
   },
   accionesContainer: {
     flexDirection: 'row',
+    borderRadius: 12,
     justifyContent: 'space-around',
     marginBottom: 15,
   },
   reporteCard: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+    backgroundColor: '#f9f9f9', // gris muy claro
+    borderRadius: 12,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   reporteTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+    color: '#000', // negro
   },
   reporteLine: {
     flexDirection: 'row',
@@ -480,6 +552,7 @@ const styles = StyleSheet.create({
   },
   reporteValue: {
     fontWeight: '600',
+    color: '#333',
   },
   graficoContainer: {
     marginVertical: 10,
@@ -496,6 +569,7 @@ const styles = StyleSheet.create({
   barraLabel: {
     marginTop: 5,
     fontSize: 10,
+    color: '#333',
   },
   lineaHorizontal: {
     position: 'absolute',
@@ -515,7 +589,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#841584',
+    backgroundColor: '#333',
     transform: [{ translateX: -4 }, { translateY: -4 }],
   },
   puntoLabel: {
@@ -525,6 +599,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 40,
     left: -20,
+    color: '#333',
   },
   leyendaItem: {
     flexDirection: 'row',
@@ -539,6 +614,7 @@ const styles = StyleSheet.create({
   },
   leyendaText: {
     fontSize: 14,
+    color: '#333',
   },
   comparativaGrid: {
     flexDirection: 'row',
@@ -550,31 +626,37 @@ const styles = StyleSheet.create({
     width: '33%',
     padding: 5,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#ccc',
+    color: '#000',
   },
   gridCell: {
     width: '33%',
     padding: 5,
     borderBottomWidth: 1,
-    borderColor: '#f5f5f5',
+    borderColor: '#eee',
+    color: '#333',
   },
   mesaCard: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 12,
+    padding: 12,
     marginRight: 10,
     width: 120,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   mesaCardTitle: {
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#000',
   },
   emptyText: {
     textAlign: 'center',
     marginVertical: 10,
-    color: '#6c757d',
+    color: '#666',
   },
 });
+
 
 export default ReportesScreen;
